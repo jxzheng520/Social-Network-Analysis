@@ -1,0 +1,221 @@
+---
+title: "FINAL_EXAMPLE_TL_SNA"
+author: "Jolin Zheng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+# Final Project Brief
+In this final project you will explore the data that have been working on all semester long. The aim of this project is for you to do an in-depth exploration which includes descriptions, visualisations, and some primary analysis. The learning outcomes for this is to demonstrate your skill in transforming (10 points), visualising (10 points) and analysing (20 points) network data.
+
+The first two parts of the assignment, the transformation and visualisation of your data, are your exploration. Here, I want you to be paying attention to the nature of your data and how the network is structured. This should inform the last portion of the project - the analysis. Based on your exlporation, what types of questions are you asking about your data? What are some hypotheses you may have about people in the network or the network itself? You will need to write about these thoughts as part of your project to demosntrate your ability to explore network data and generate ideas on how to/what to analyse. 
+
+The "rubric" for this assignment is like all of our others - completion. Please fulfill all outlined prompts. Thus far, you have had assignments on exploring, transforming and visualising your network. Therefore, these components are worth only a small portion of the final marks of this assignment. Here is the breakdown: 
+
+Part 1: Transforming (10 points)
+Part 2: Visualising (10 points) 
+Part 3: Analysing (20 points)
+Total points = 40. 
+
+As usual, make a markdown document and submit is as a pdf. 
+
+Here are some instructions for you to follow. Please refer to the "final project example.html" document on Moodle as an example final project for you to draw on for inspiration. 
+
+# INSTRUCTIONS
+
+# Harry Potter Crush Analysis
+First, open with a BRIEF paragraph discussing your project. Tell me what there data are and a little about what you are researching about the data. Here, you can imagine the types of questions your boss may have asked you to analyse on these data. 
+```{r}
+### In this project, I will clean and transform, visualize, and make an analysis o the Harry Potter data set. There are 18 observations of romantic crush relationships. The relationships of this data set can be used to answer the questions of who the most romantically sought-after characters are and whether any crushes are mutually reciprocated. 
+
+```
+
+
+## Part 1: Data Transformation
+In this section you must bring in, clean and transform your network data. 
+
+NOTE: If your network data are already clean you MUST transform the network some how. For example, create a subgraph, delete/add nodes/edges even if it does not make much sense. Just create a random object and do it. The point is you demonstrate the skill. 
+```{r}
+#importing libraries 
+library(igraph)
+library(readxl)
+library(threejs)
+```
+
+
+```{r}
+#imported data set 
+my_data <- read.csv("/Users/jolin/Downloads/DSA 295/Hogwarts Crushes.csv", header = TRUE)
+my_network <- graph_from_data_frame(my_data, directed = TRUE)
+```
+
+
+```{r}
+#plot
+plot(my_network)
+```
+
+
+```{r}
+#checking nulls and loops and then removing them to transform data set
+sum(is.na(my_data))                        
+any(my_data[,1] == my_data[,2])      
+
+my_data <- my_data[my_data$Crusher != "" & my_data$Crush != "", ]
+
+
+graph <- graph_from_data_frame(my_data, directed = TRUE)
+graph <- simplify(graph, remove.loops = TRUE, remove.multiple = FALSE)
+
+plot(graph)
+```
+
+## Part 2: Data Visualisation
+In this section, please produce at least one basic, intermediate, and advanced network visualisation. Beneath each one, please describe (1-2 sentences) the visualisation you have created discussing any observations you make about the network. 
+
+
+```{r}
+# Basic visualization 
+plot(graph,
+     vertex.label.cex = 0.5,
+     vertex.label.dist = 3,
+     vertex.label.color = "red",
+     vertex.color = "pink",
+     edge.color="light blue")
+
+title(main = "Harry Potter Crushes")
+
+```
+```{r}
+### In this basic level visualization, we can observe that the nodes represents characters and edges indicating a crush connection between them. Several distinct clusters are visible around Harry Potter, Cho Chang, and Cedric Diggory. There are some characters with no crushes like McGonagal, Flitwick, and Voldemort. 
+```
+
+```{r}
+# Intermediate level visualization 
+degree_scores <- degree(graph)
+vertex.size.degree <- degree_scores * 5    
+
+plot(graph,
+     layout = layout_with_kk(graph),
+     vertex.size = vertex.size.degree,    
+     vertex.color = "pink",
+     vertex.label.cex = 0.6,
+     vertex.label.dist = 2,
+     vertex.label.color = "red",
+     edge.color = "lightblue",
+     main = "Degree Centrality")
+```
+```{r}
+### In this visualization, the degree of centrality is being observed and scaled. If the nodes aka circles are bigger then the individual is involved in more crush relationships. For example, Cho Chang, Harry Potter, Ron Weasley, and Lily Potter. However, Voldemort, McGonagal, Flitwick, and Severus Snape appear as tiny dots, showing their minimal connection in the network (largely due to their self-crush entries being removed).
+```
+
+```{r}
+# Advanced visualization 
+crush_colour <- my_network
+crush_colour <- set_vertex_attr(crush_colour,
+                                "color",
+                                value = ifelse(degree(crush_colour) > 2,
+                                               "red", "ivory"))
+
+
+V(crush_colour)$size <- 5
+
+crush_3d_col <- graphjs(crush_colour,
+                        main = "Crush Relationships in Harry Potter",
+                        bg = "black",
+                        vertex.label = V(crush_colour)$name)
+crush_3d_col
+```
+
+```{r}
+### In this advanced visualization, we can observe the nodes colored red are for characters with degree greater than 2 and ivory for those with fewer connections. Based on our earlier analysis, characters like Cho Chang, Harry Potter, Ron Weasley, and Lily Potter would appear as red nodes and characters such as Severus Snape, Cedric Diggory, and Ginny Weasley render in ivory. The 3D layout allows the viewer to rotate and explore the cluster structure interactively.
+```
+
+
+## Part 3: 
+Here, you must speculate on your explorations above. You have transformed and visualised your network data. What questions are you now going to ask about them? Based on your exploration, do you hypothesise certain things about the network or the people therein? 
+
+In this you must analyse and generate a report on your network. In your analysis, please discuss and present deliverables (tables, visualisations etc.) about the people in the network, the network itself, and communities within the network. 
+
+Be creative about what analysis you would like to perform. You can combine skills here too. For example, visualise things as you analyse people/nodes in the networks. Or, you may identify a community of highly central people. You may then create a subgraph of a community you are interested in. Be creative! 
+
+One final note, remember that this is a report. You need to write this report as if I do not understand anything about networks, network data, or R. Be clear about what you are doing. Tie together how your exploration xc of the data led you to perform this analysis. For example, maybe the visualisations suggested that the network was very fragmented, or highly centralised. This may have led you to want to study certain people or perform certain analyses. 
+
+Final tips: 
+When writing your markdown, use the following header guidelines: 
+# Header
+## Subheader
+### Third-level header
+
+GOOD LUCK!
+
+```{r}
+# Harry Potter Report 
+
+### The dataset used in this analysis is the Hogwarts Crushes dataset, this data set contains the romantic crush relationship of 15 Harry Potter characters and 18 observations. Notably, the dataset includes three self-directed entries (McGonagall, Voldemort, and Flitwick crushing on themselves), which were treated as data anomalies and removed prior to network construction. From the previous visualizations, I was able to oberserve some interesting trends. In the basic visualization network plot, a key observation was how certain individuals were in a center of a cluster while other individuals were isolated. In the intermediate level plot, I decided to tap into the degree of centrality. In other words, which individuals were popular. The 3D visualization confirmed a clear divide between highly connected (red) and peripheral (ivory) characters. This led us to ask three guiding questions:Who are the most important people in this romantic network, and in what ways? How connected and fragile is the network overall — what happens if a key character is removed? 
+
+## Who are the most important people in this network? 
+### In this network, the "importance" can be measured in different ways. For example, degree of centrality measures how many direct crush connections a character has. A character with a high degree is simply involved in a large number of romantic ties. They can be the crusher, the crushed-upon, or both. Think of it as raw romantic popularity. For betweenness centrality, It measures how often a character sits on the shortest path connecting two other characters in the network. A character with high betweenness acts as a bridge. In a social context, these are the people who link otherwise separate social circles together. Looking at the graphs below, we can observe the individuals who are "important" are Cho Chang, Harry Potter, Ron Weasley, and Lily Potter, suggesting they are the romantic "hubs" of the Harry Potter world.
+
+# Degree Centrality and Betweenness Centrality Side by Side 
+par(mfrow = c(1, 2))  
+
+degree_scores <- degree(graph)
+vertex.size.degree <- degree_scores * 5    
+
+plot(graph,
+     layout = layout_with_kk(graph),
+     vertex.size = vertex.size.degree,    
+     vertex.color = "pink",
+     vertex.label.cex = 0.6,
+     vertex.label.dist = 2,
+     vertex.label.color = "red",
+     edge.color = "lightblue",
+     main = "Degree Centrality")
+
+betweenness_scores <- betweenness(graph)
+vertex.size.between <- betweenness_scores * 0.5    
+
+plot(graph,
+     layout = layout_with_kk(graph),
+     vertex.size = vertex.size.between,          
+     vertex.color = "pink",
+     vertex.label.cex = 0.6,
+     vertex.label.dist = 1.8,
+     vertex.label.color = "red",
+     edge.color = "lightblue",
+     main = "Betweenness Centrality")
+
+par(mfrow = c(1, 1))  
+
+## How Robust Is the Network?
+### In network analysis robustness means how well does a network hold together when key members are removed. From the way our network is connected, I believe if a "popular" individual is removed then the network would fall apart. This is important because in social networks, the removal of a highly central node  can dramatically alter the network's connectivity. To test this,  the removal of Cho Chang, our most central character by both degree and betweenness centrality, to see what effect her absence would have. The results, visualized in the side-by-side plots above show when Cho Chang is removed from the network, the number of disconnected components increases. The network breaks apart into more isolated pieces. This is visible in the right-hand plot above, where Harry Potter and Ginny Weasley become a small isolated pair, completely cut off from the rest of the network. In other words, Cho Chang was the only thing connecting Harry's cluster to Cedric Diggory's, and without her, those two parts of the network have no way of reaching one another. This shows that she is not just romantically popular, but structurally essential to the network holding together.
+
+# Removing Cho Chang 
+graph_no_cho <- delete_vertices(graph, "Cho Chang")
+
+cat("Components after removing Cho Chang:", components(graph_no_cho)$no)
+
+# Before and after 
+par(mfrow = c(1, 2))
+
+plot(graph,
+     vertex.color      = ifelse(V(graph)$name == "Cho Chang", "red", "pink"),
+     vertex.size       = 9,
+     vertex.label.cex  = 0.6,
+     edge.color        = "lightblue",
+     main              = "Full Network")
+
+plot(graph_no_cho,
+     vertex.color      = "pink",
+     vertex.size       = 8,
+     vertex.label.cex  = 0.6,
+     edge.color        = "lightblue",
+     main              = "Network Without Cho Chang")
+
+par(mfrow = c(1, 1))
+
+### In this project, the analysis of the Harry Potter Crush network revealed the network fragmented and centralized, dominated by a small handful of romantically significant characters. The centrality analysis confirmed that Cho Chang, Harry Potter, Ron Weasley, and Lily Potter are the most important characters in the network. They scored highest across betweenness and closeness centrality. A key observation, Cho Chang was observed as the single most structurally critical character she acted as the key bridge holding different parts of the network together. The robustness analysis revealed just how fragile this romantic world is. The network was already fragmented before any manipulation, with several characters being isolated. When Cho Chang was removed, the network broke apart further. Harry Potter and Ginny Weasley became entirely disconnected from the rest of the network, confirming that the overall structure is heavily dependent on a very small number of bridge characters. Through this project I have learned that even from a small 2 column table can reveal complex information on the relationship and network of people. 
+```
